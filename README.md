@@ -1,44 +1,106 @@
-# Authentication Service
+MOSIP ID Authentication – Extended Endpoints
 
-## About
-Authentication Service is used by Authentication/E-KYC Partners 
-* to authenticate an individual's UIN/VID using one ore more authentication types.
-* to request E-KYC for an individul's UIN/VID using one ore more authentication types.
+This module is part of the MOSIP ID Authentication
+microservice suite.
+The authentication-service component provides REST APIs for performing authentication of individuals.
 
-## Authentication types
-Any combination of the supported [authentication types](https://docs.mosip.io/1.2.0/id-authentication#authentication-types) may be used.
-  
-## Modalities
-* Refer [biometric modalities](https://docs.mosip.io/1.2.0/biometrics#modalities).
-* Above authentication types can be allowed/disallowed/mandated by the [configuraion](../../docs/configuration.md#allowed-authentication-types) and the [Authentication/E-KYC Partner's Policy](../../docs/configuration.md).
+This extension introduces two new REST endpoints for improved auditing and verification support.
 
-## Partner/MISP validation
-* Below partner/MISP data are validated before processing the authentication request:
-  1. MISP License Key
-  2. Partner ID
-  3. Partner API Key
+📌 New Endpoints
+1. Audit Logging API
 
-## Endpoints:
-* Authentication:
+Path:
 
-```
-POST /idauthentication/v1/auth/{MISP-LicenseKey}/{Auth-Partner-ID}/{Partner-Api-Key}
-```
+POST /api/v1/audit/log
 
-* E-KYC
 
-```
-POST /idauthentication/v1/kyc/{MISP-LicenseKey}/{Auth-Partner-ID}/{Partner-Api-Key}
-```
+Description:
+Stores an audit event (e.g., login attempt, verification request) in the system for traceability.
 
-## Callbacks for WebSub
-* Master data update callback- to process WebSub message sent from Master data service and clear master data cache, so that in next authentication the master data is re-cached
+Request Body (JSON):
 
-## Dependencies
-* Kernal Notification Service: For sending notifications for Authentication Success/Failure
-* Kernel Audit Service
-* Keycloak serivce: To get authentication token for connecting to the above kernel services
-* WebSub: For getting events for Credential data/ IDentity data/ Partner data/ Master data updates.
-* Bio:SDK HTTP service: For biometric authentication
-* HSM: For retrieving encryption/decryption keys.
+{
+"eventType": "LOGIN",
+"description": "User attempted login",
+"userId": "12345"
+}
 
+
+Response (200 OK):
+
+{
+"status": "success",
+"message": "Audit event logged successfully"
+}
+
+2. Verification API
+
+Path:
+
+POST /api/v1/auth/verify
+
+
+Description:
+Verifies user credentials or identity attributes. Intended for internal modules that require a quick verification service.
+
+Request Body (JSON):
+
+{
+"userId": "12345",
+"credential": "******"
+}
+
+
+Response (200 OK):
+
+{
+"verified": true,
+"timestamp": "2025-10-05T15:30:00Z"
+}
+
+🛠️ How to Run Locally
+
+Clone the repository:
+
+git clone https://github.com/mosip/id-authentication.git
+cd id-authentication/authentication-service
+
+
+Build the project (requires JDK 11 and Maven 3.6+):
+
+mvn clean install
+
+
+Start the service:
+
+mvn spring-boot:run
+
+
+Access APIs at:
+
+http://localhost:8080/api/v1/
+
+✅ Testing
+
+Unit tests are written using JUnit 5, Spring Boot Test, and Mockito.
+
+Run tests:
+
+mvn test
+
+📂 Project Structure
+authentication-service
+└── src
+└── main
+└── java/io/mosip/authentication/service
+├── controller        # REST controllers
+├── service           # Business logic
+├── dto               # Request/Response DTOs
+├── repository        # JPA Repositories
+└── ...
+
+📖 Documentation
+
+MOSIP Authentication Overview
+
+Swagger/OpenAPI (if enabled): http://localhost:8080/swagger-ui.html
